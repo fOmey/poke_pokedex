@@ -1,0 +1,251 @@
+		<head>
+			<style>
+				body {
+					font-family: Verdana, Geneva, sans-serif;
+					font-size: 10px;
+				}
+				
+				#nav {
+					padding-bottom: 2px;
+					margin-bottom: 8px;
+					display: inline-block;
+				}
+				
+				#content {
+					width: 95%;
+					margin: 0 auto;
+				}
+				
+				#data {
+					width: 95%;
+					height: 75%;
+				}
+				
+				#actions {
+					text-align: center;
+				}
+				
+				#title {
+					font-weight: bold;
+				}
+				
+				a:link {
+					color: #999999;
+					text-decoration: none;
+				}
+
+				a:visited {
+					color :#999999;
+				}
+
+				a:hover {
+					color: #707070;
+					text-decoration: underline;
+				}
+
+				a:active {
+					color: #999999;
+				}
+			</style>
+			<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+			<script>
+				function _isContains(json, value) {
+					let contains = false;
+					Object.keys(json).some(key => {
+						contains = typeof json[key] === 'object' ? _isContains(json[key], value) : json[key] === value;
+						 return contains;
+					});
+					return contains;
+				}
+			
+				$(document).ready(function() {
+				
+					$("#copy").click(function(event) {
+						event.preventDefault();
+						document.querySelector('#data').select();
+						try {
+							document.execCommand('copy');
+						} 
+						catch (err) {
+						}
+					});
+					
+					$("#export").click(function(event) {
+						event.preventDefault();
+						var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent($("#data").val());
+						var link = document.createElement("a");
+						link.download = "pokedex.json";
+						link.href = dataUri;
+						document.body.appendChild(link);
+						link.click();
+						document.body.removeChild(link);
+						delete link;
+					});
+					
+					$("#get").click(function(event) {
+						event.preventDefault();
+						
+						var data = {};
+						var types = {};
+						
+						$("#status").html("fetching pokemon types: 0/18");
+						
+						for (i = 1; i <= 18; i++) {
+						
+							var url = 'http://pokeapi.co/api/v2/type/' + i + '/';
+							
+							$.getJSON(url,function(jd) {
+								var data = {};
+								
+								var resistant = {};
+								var weakness = {};
+							
+								var resistantIndex = 0;
+								var weaknessIndex = 0;
+              
+								var id = jd.id;
+								var name = jd.name;
+								name = name.charAt(0).toUpperCase() + name.slice(1);
+								
+								var half_damage_from = {};
+								for (x = 0; x < jd.damage_relations.half_damage_from.length; x++) {
+									var baseStat = jd.damage_relations.half_damage_from[x].name;
+									if (!_isContains(resistant, baseStat)) {
+										resistant[resistantIndex] = baseStat;
+										resistantIndex++;
+									}
+								}
+                  
+								var half_damage_to = {};
+								for (x = 0; x < jd.damage_relations.half_damage_to.length; x++) {
+									var baseStat = jd.damage_relations.half_damage_to[x].name;
+									if (!_isContains(weakness, baseStat)) {
+										weakness[weaknessIndex] = baseStat;
+										weaknessIndex++;
+									}
+								}
+                  
+								var double_damage_from = {};
+								for (x = 0; x < jd.damage_relations.double_damage_from.length; x++) {
+									var baseStat = jd.damage_relations.double_damage_from[x].name;
+									if (!_isContains(weakness, baseStat)) {
+										weakness[weaknessIndex] = baseStat;
+										weaknessIndex++;
+									}
+								}
+                        
+								var double_damage_to = {};
+								for (x = 0; x < jd.damage_relations.double_damage_to.length; x++) {
+									var baseStat = jd.damage_relations.double_damage_to[x].name;
+									if (!_isContains(resistant, baseStat)) {
+										resistant[resistantIndex] = baseStat;
+										resistantIndex++;
+									}
+								}
+                        
+								var no_damage_to = {};
+								for (x = 0; x < jd.damage_relations.no_damage_to.length; x++) {
+									var baseStat = jd.damage_relations.no_damage_to[x].name;
+									if (!_isContains(weakness, baseStat)) {
+										weakness[weaknessIndex] = baseStat;
+										weaknessIndex++;
+									}
+								}
+								
+								var no_damage_from = {};
+								for (x = 0; x < jd.damage_relations.no_damage_from.length; x++) {
+									var baseStat = jd.damage_relations.no_damage_from[x].name;
+									if (!_isContains(resistant, baseStat)) {
+										resistant[resistantIndex] = baseStat;
+										resistantIndex++;
+									}
+								}
+                  
+								var damage_relations = {
+								//	"half_damage_from": half_damage_from,
+								//	"half_damage_to": half_damage_to,
+								//	"double_damage_from": double_damage_from,
+								//	"double_damage_to": double_damage_to,
+								//	"no_damage_from": no_damage_from,
+								//	"no_damage_to": no_damage_to
+									"resistant": resistant,
+									"weakness": weakness
+								};
+                  
+								types[name] = {
+												"id": id,
+												damage_relations
+												};
+												
+								$("#status").html("fetching pokemon types: " + jd.id + "/18");
+							});
+						}
+						
+						for (i = 1; i <= 251; i++) {
+							var url = 'http://pokeapi.co/api/v2/pokemon/' + i + '/';
+							
+							$.getJSON(url,function(jd) {
+								var id = jd.id;
+								id = ('00' + id).slice(-3);
+								
+								var name = jd.name;
+								name = name.charAt(0).toUpperCase() + name.slice(1);
+								
+								var type = '';
+								for (x = 0; x < jd.types.length; x++) {
+									var ty = jd.types[x].type.name;
+									ty = ty.charAt(0).toUpperCase() + ty.slice(1);
+									type += ty + ' ';
+								}
+								type.slice(0, -1);
+								
+								var type_brief = {};
+								for (x = 0; x < jd.types.length; x++) {
+									var typeName = jd.types[x].type.name;
+									typeName = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+									var baseStat = types[typeName]
+									type_brief[typeName] = baseStat;
+								}
+								
+								var height = jd.height;
+								var weight = jd.weight;
+								var base_experience = jd.base_experience;
+								
+								var stats = {};
+								for (x = 0; x < jd.stats.length; x++) {
+									var statName = jd.stats[x].stat.name;
+									statName = statName.charAt(0).toUpperCase() + statName.slice(1);
+									var baseStat = jd.stats[x].base_stat;
+									stats[statName] = baseStat;
+								}
+								
+								data[jd.id] = {
+												"id": id,
+												"name": name,
+												"type": type,
+												"type_brief": type_brief,
+												"height": height,
+												"weight": weight,
+												"base_experience": base_experience,
+												"stats": stats,
+												};
+								
+								$("#status").html("fetching pokemon: " + jd.id + "/251");
+								$("#data").val(JSON.stringify(data));
+							});
+						}
+					});
+				});
+			</script>
+		</head>
+		
+		<body>
+			<div id="nav">
+				<span id="title">pokedex_</span> <a href="#" id="get">get</a> :: <span id="status">idle..</span>
+			</div>
+			<div id="content">
+				<textarea id="data"></textarea>
+				<div id="actions"><a href="#" id="copy">copy to clipboard</a> :: <a href="#" id="export">export json</a></div>
+			</div>
+			<div id="debug"></div>
+		</body>
