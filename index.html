@@ -85,7 +85,7 @@
 					$("#get").click(function(event) {
 						event.preventDefault();
 						
-						var data = {};
+						var data = [];
 						var types = {};
 						
 						$("#status").html("fetching pokemon types: 0/18");
@@ -95,8 +95,7 @@
 							var url = 'http://pokeapi.co/api/v2/type/' + i + '/';
 							
 							$.getJSON(url,function(jd) {
-								var data = {};
-								
+							
 								var resistant = {};
 								var weakness = {};
 							
@@ -161,21 +160,9 @@
 									}
 								}
                   
-								var damage_relations = {
-								//	"half_damage_from": half_damage_from,
-								//	"half_damage_to": half_damage_to,
-								//	"double_damage_from": double_damage_from,
-								//	"double_damage_to": double_damage_to,
-								//	"no_damage_from": no_damage_from,
-								//	"no_damage_to": no_damage_to
-									"resistant": resistant,
-									"weakness": weakness
-								};
+								var damage_relations = { "resistant": resistant, "weakness": weakness };
                   
-								types[name] = {
-												"id": id,
-												damage_relations
-												};
+								types[name] = { "id": id, damage_relations };
 												
 								$("#status").html("fetching pokemon types: " + jd.id + "/18");
 							});
@@ -214,21 +201,21 @@
 								var stats = {};
 								for (x = 0; x < jd.stats.length; x++) {
 									var statName = jd.stats[x].stat.name;
-									statName = statName.charAt(0).toUpperCase() + statName.slice(1);
 									var baseStat = jd.stats[x].base_stat;
 									stats[statName] = baseStat;
 								}
 								
-								data[jd.id] = {
-												"id": id,
-												"name": name,
-												"type": type,
-												"type_brief": type_brief,
-												"height": height,
-												"weight": weight,
-												"base_experience": base_experience,
-												"stats": stats,
-												};
+								var temp = new Object();
+								temp["id"] = id;
+								temp["name"] = name;
+								temp["type"] = type;
+								temp["type_brief"] = type_brief;
+								temp["height"] = height;
+								temp["weight"] = weight;
+								temp["base_experience"] = base_experience;
+								temp["stats"] = stats;
+
+								data.push(temp);
 								
 								$("#status").html("fetching pokemon: " + jd.id + "/251");
 								$("#data").val(JSON.stringify(data));
